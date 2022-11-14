@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:async'; // Add this import
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../models/navigation_controls.dart';
+import 'front_page.dart';
+// Add this import back
 
 class Search extends StatefulWidget {
   @override
@@ -10,6 +15,8 @@ class _SearchState extends State<Search> {
   late WebViewController _webViewController;
   TextEditingController _teController = new TextEditingController();
   bool showLoading = false;
+  final controller =
+      Completer<WebViewController>(); // Instantiate the controller
 
   void updateLoading(bool ls) {
     this.setState(() {
@@ -20,6 +27,32 @@ class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.home),
+          iconSize: 30.0,
+          color: Colors.white,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FrontPage(),
+              ),
+            );
+          },
+        ),
+        title: Text(
+          'MyAdmo',
+          style: TextStyle(
+            fontSize: 28.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0.0,
+        actions: [
+          NavigationControls(controller: controller),
+        ],
+      ),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
@@ -77,13 +110,20 @@ class _SearchState extends State<Search> {
                           child: Center(
                             child: IconButton(
                                 icon: Icon(
-                                  Icons.arrow_forward,
+                                  Icons.search,
                                   color: Colors.white,
                                 ),
                                 onPressed: () {
                                   String finalURL = _teController.text;
-                                  if (!finalURL.startsWith("https://")) {
-                                    finalURL = "https://" + finalURL;
+
+                                  if (finalURL.endsWith(".com")) {
+                                    if (!finalURL.startsWith("https://")) {
+                                      finalURL = "https://" + finalURL;
+                                    }
+                                  } else {
+                                    finalURL =
+                                        "https://www.google.com/search?q=" +
+                                            finalURL;
                                   }
                                   if (_webViewController != null) {
                                     updateLoading(true);
@@ -114,6 +154,7 @@ class _SearchState extends State<Search> {
                         javascriptMode: JavascriptMode.unrestricted,
                         onWebViewCreated: (webViewController) {
                           _webViewController = webViewController;
+                          controller.complete(webViewController);
                         },
                       ),
                       (showLoading)
